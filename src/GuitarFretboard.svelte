@@ -1,73 +1,63 @@
-<script>  
-  let strings = ['E2', 'A2', 'D3', 'G3', 'B3', 'E4'];
-  let dots = [5, 7, 9, 12, 15, 17, 19];
-  let frets = 22;
-  
+<script>
+  import { dots, frets, intervals, intervalQuality, noteLabels, semitones, strings } from './instrumentVariables';
   $: noteType = 'sharps';
-  $: noteLabels = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
-  $: semiTones = {
-    sharps: ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'],
-    flats: ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'],
-  }
   $: fretboard = strings.map(s => {
-      // s = open string
-      let note = s.substring(0, s.length - 1);
-      let octave = Number(s.substring(s.length - 1));
-      let index = semiTones[noteType].indexOf(note);
-      return [...Array(frets).keys()].map(f => {
-        // f = fret number
-        let degree = (index + f) % 12;
-        let turn = Math.floor((index + f) / 12);
-        return semiTones[noteType][degree] + (octave + turn).toString();
-      });
-    }).reverse();
+    // s = open string
+    let note = s.substring(0, s.length - 1);
+    let octave = Number(s.substring(s.length - 1));
+    let index = semitones[noteType].indexOf(note);
+    return [...Array(frets).keys()].map(f => {
+      // f = fret number
+      let degree = (index + f) % 12;
+      let turn = Math.floor((index + f) / 12);
+      return semitones[noteType][degree] + (octave + turn).toString();
+    });
+  }).reverse();
+  $: root = 'C';
+  $: interval = intervalQuality[0];
+    
   const updateNotes = (e) => {
     noteType = e.target.value;
-  }
+  };
 
-  // note name spaces
-  const intervals = {
-    unison: 0,
-    second: 1,
-    third: 2,
-    fourth: 3,
-    fifth: 4,
-    sixth: 5,
-    seventh: 6,
-    octave: 7,
-  }
+  const updateRoot = (e) => {
+    root = e.target.value;
+  };
 
-  // [abbreviation, note name spaces, semitones]
-  const intervalQuality = {
-    unison: ['P1', 0, 0],
-    minorSecond: ['m2', 1, 1],
-    majorSecond: ['M2', 1, 2],
-    minorThird: ['m3', 2, 3],
-    majorThird: ['M3', 2, 4],
-    dimenishedFourth: ['D4', 3, 4],
-    perfectFourth: ['P4', 3, 5],
-    augmentedFouth: ['A4', 3, 6],
-    dimenishedFifth: ['D5', 4, 6],
-    perfectFifth: ['P5', 4, 7],
-    augmentedFifth: ['A5', 4, 8],
-    minorSixth: ['m6', 5, 8],
-    majorSixth: ['M6', 5, 9],
-    minorSeventh: ['m7', 6, 10],
-    majorSeventh: ['M7', 6, 11],
-  }
+  const updateInterval = (e) => {
+    interval = intervalQuality[e.target.value];
+  };
 </script>
 
 <div class="container-guitar-fretboard">
   <div>
-    <select bind:value={noteType} on:change="{updateNotes}" on:blur="{updateNotes}">
+    <label for="select-display">Choose display</label>
+    <select id="select-display" bind:value={noteType} on:change="{updateNotes}" on:blur="{updateNotes}">
       <option value='flats'>Flats</option>
       <option value='sharps'>Sharps</option>
     </select>
   </div>
+  <div>
+    <label for="select-root">Select root</label>
+    <select id="select-root" bind:value={root} on:change="{updateRoot}" on:blur="{updateRoot}">
+      {#each semitones[noteType] as note}
+        <option value='{note}'>{note}</option>
+      {/each}
+    </select>
+  </div>
+  <div>
+    <label for="select-interval">Select interval</label>
+    <select id="select-interval" bind:value={interval} on:change="{updateInterval}" on:blur="{updateInterval}">
+      {#each intervalQuality as values, index}
+        <option value='{index}'>{values[0]}</option>
+      {/each}
+    </select>
+    <span>{interval[0]}</span>
+  </div>
   {#each fretboard as frets}
 		<div class="guitar-string">
 			{#each frets as fret, fretIndex}
-        <div class="guitar-fret">
+        <div class="guitar-fret fret-{fretIndex}">
           <span class="text-note">{ fret }</span>
           {#if (frets[0] === 'G3')}
             <div class="dot-row">
@@ -91,6 +81,11 @@
 .dot-row {
   position: absolute;
   z-index: -1;
+}
+
+.fret-0 .text-note {
+  font-weight: 900;
+  font-size: 1rem;
 }
 
 .guitar-string {
